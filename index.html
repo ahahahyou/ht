@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味绘图</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 防止出现滚动条 */
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: url('bj.jpeg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        h1 {
+            position: absolute;
+            top: 20px; 
+            color: black;
+            font-size: 30px;
+            font-family: '楷体', 'SimKai', 'Microsoft YaHei', sans-serif;
+        }
+
+        .background {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 100%;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .container {
+            position: relative;
+            width: 85vw; /* 使用视口宽度 */
+            height: 65vh; /* 使用视口高度 */
+            background-color: floralwhite;
+            overflow: hidden;
+            border: 2px solid #ccc;
+            margin-top: 13vh; /* 使用视口高度 */
+            border-radius: 15px;
+        }
+
+        .draggable {
+            cursor: move;
+            margin: 10px;
+            position: relative; /* 相对定位以便在方框内自由移动 */
+        }
+
+        .draggable img {
+            width: 80px;
+            height: auto;
+        }
+
+        .image-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 100px;
+        }
+
+        .button {
+            position: absolute;
+            padding: 15px 30px;
+            margin: 40px 200px;
+            font-size: 25px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: floralwhite;
+            color: black;
+            font-family: '楷体', 'SimKai', 'Microsoft YaHei', sans-serif;
+        }
+
+        #resetButton {
+            left: 20px;
+            bottom: 20px;
+        }
+
+        #endButton {
+            right: 20px;
+            bottom: 20px;
+        }
+
+        .resize-instruction {
+            text-align: center;
+            font-size: 20px;
+            color: black;
+			margin-bottom: 140px;
+            font-family: '楷体', 'SimKai', 'Microsoft YaHei', sans-serif; /* 设置字体为楷体 */
+        }
+    </style>
+</head>
+<body>
+    <h1>请绘制你心中的田园风光</h1>
+    <div class="background">
+        <div class="image-column" id="left-column">
+            <div class="draggable" id="img1" draggable="true"><img src="wu1.png" alt="Image 1"></div>
+            <div class="draggable" id="img2" draggable="true"><img src="lao.png" alt="Image 2"></div>
+            <div class="draggable" id="img3" draggable="true"><img src="shu1.png" alt="Image 3"></div>
+            <div class="draggable" id="img4" draggable="true"><img src="shu2.png" alt="Image 4"></div>
+        </div>
+        <div class="container" id="drawingArea">
+            <!-- 可拖动的目标区域 -->
+        </div>
+        <div class="image-column" id="right-column">
+            <div class="draggable" id="img5" draggable="true"><img src="wu2.png" alt="Image 5"></div>
+            <div class="draggable" id="img6" draggable="true"><img src="xiao.png" alt="Image 6"></div>
+            <div class="draggable" id="img7" draggable="true"><img src="shan.png" alt="Image 7"></div>
+            <div class="draggable" id="img8" draggable="true"><img src="ji.png" alt="Image 8"></div>
+        </div>
+    </div>
+
+    <div class="resize-instruction">请滚动滚轮更改元素大小</div> <!-- 将说明文本放在方框下方 -->
+
+    <button id="resetButton" class="button">重新绘制</button>
+    <button id="endButton" class="button" onclick="endLearning()">结束学习</button>
+<script>
+    const draggables = document.querySelectorAll('.draggable');
+    const container = document.querySelector('.container');
+
+    // 初始化可拖动元素的函数
+    function initDraggable(draggable) {
+        draggable.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', draggable.id);
+            e.dataTransfer.effectAllowed = 'move'; // 设置拖动效果为移动
+        });
+    }
+
+    // 初始化所有可拖动元素
+    draggables.forEach(initDraggable);
+
+    // 拖动元素在容器内放置的处理函数
+    function handleDrop(e) {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        const draggable = document.getElementById(id);
+
+        // 创建一个新的元素并设置其位置
+        const newImg = document.createElement('div');
+        newImg.classList.add('draggable');
+        newImg.draggable = true;
+        newImg.innerHTML = draggable.innerHTML; // 复制图片内容
+
+        const offsetX = e.clientX - container.getBoundingClientRect().left - draggable.offsetWidth / 2;
+        const offsetY = e.clientY - container.getBoundingClientRect().top - draggable.offsetHeight / 2;
+
+        newImg.style.position = 'absolute';
+        newImg.style.left = `${offsetX}px`;
+        newImg.style.top = `${offsetY}px`;
+
+        container.appendChild(newImg);
+        initDraggable(newImg); // 初始化新图片的拖动功能
+
+        // 添加鼠标滚轮缩放功能
+        let scale = 1;
+        newImg.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            scale *= event.deltaY < 0 ? 1.1 : 0.9; // 向上滚动放大，向下滚动缩小
+            scale = Math.min(Math.max(scale, 0.5), 5); // 限制缩放范围在0.5到5之间
+            newImg.style.transform = `scale(${scale})`;
+        });
+
+        // 允许在方框内拖动已放置的图片
+        newImg.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', newImg.id);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        newImg.addEventListener('dragend', (e) => {
+            const newX = e.clientX - container.getBoundingClientRect().left - newImg.offsetWidth / 2;
+            const newY = e.clientY - container.getBoundingClientRect().top - newImg.offsetHeight / 2;
+            newImg.style.left = `${newX}px`;
+            newImg.style.top = `${newY}px`;
+        });
+
+        newImg.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+    }
+
+    // 添加事件监听器
+    container.addEventListener('drop', handleDrop);
+    container.addEventListener('dragover', (e) => e.preventDefault());
+
+    document.getElementById('resetButton').addEventListener('click', () => {
+        const drawingArea = document.getElementById('drawingArea');
+        while (drawingArea.firstChild) {
+            drawingArea.removeChild(drawingArea.firstChild);
+        }
+    });
+
+    function endLearning() {
+        window.location.href = 'https://ahahahyou.github.io/js/'; // 请替换为实际的URL
+    }
+</script>
+
+</body>
+</html>
